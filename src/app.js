@@ -14,7 +14,14 @@ const app = express();
 connectDB();
 
 //
-app.use(cors());
+
+app.use(
+  cors({
+    origin: "https://ibix-learning-portal.vercel.app",
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 
 // Check if student exists in database
