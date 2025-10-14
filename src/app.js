@@ -5,6 +5,7 @@ const express = require("express");
 const connectDB = require("./config/db");
 const Student = require("./models/Student");
 const CheatSheet = require("./models/CheatSheet");
+const MCQ = require("./models/MCQ");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
 const verifyJWT = require("./middleware/JWTVerification");
@@ -12,12 +13,8 @@ const verifyJWT = require("./middleware/JWTVerification");
 const app = express();
 connectDB();
 
-app.use(
-  cors({
-    origin: "http://localhost:3000", // frontend URL
-    credentials: true,
-  })
-);
+//
+app.use(cors());
 app.use(express.json());
 
 // Check if student exists in database
@@ -104,6 +101,10 @@ app.post("/api/cheat-sheet", async (req, res) => {
           level: item.level || "",
           link: item.link || "",
           course: item.course || "",
+          tag: item.tag || "",
+          status: item.status || "",
+          cheatSheet: item.cheatSheet || "",
+          codeSol: item.codeSol || "",
         })),
       },
     };
@@ -119,6 +120,32 @@ app.post("/api/cheat-sheet", async (req, res) => {
       success: false,
       message: "Internal server error",
     });
+  }
+});
+
+app.post("/mcqs", async (req, res) => {
+  try {
+    const { gc, order } = req.body;
+
+    if (!gc || !order) {
+      return res.status(400).json({ message: "gc and order are required" });
+    }
+
+    // Find all matching questions
+    const mcqs = await Mcq.find({ gc, order });
+
+    // Format the response
+    const formattedMcqs = mcqs.map((item, index) => ({
+      id: index + 1,
+      question: item.question,
+      options: [item.option_1, item.option_2, item.option_3, item.option_4],
+      correctAnswer: item.answer - 1, // convert 1–4 to 0–3 for frontend
+      explanation: item.explanation,
+    }));
+
+    res.status(200).json(formattedMcqs);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch MCQs", error });
   }
 });
 

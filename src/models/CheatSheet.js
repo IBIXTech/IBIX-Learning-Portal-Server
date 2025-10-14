@@ -8,6 +8,10 @@ const cheatSheetSchema = new mongoose.Schema({
   level: String,
   link: String,
   course: String,
+  cheatSheet: String,
+  codeSol: String,
+  status: String,
+  tag: String,
 });
 
 module.exports = mongoose.model("Cheat Sheet", cheatSheetSchema);
