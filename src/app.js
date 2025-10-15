@@ -13,14 +13,19 @@ const verifyJWT = require("./middleware/JWTVerification");
 const app = express();
 connectDB();
 
-//
-
 app.use(
   cors({
     origin: "https://learning.ibixqt.in",
     credentials: true,
   })
 );
+
+// app.use(
+//   cors({
+//     origin: "http://localhost:3000",
+//     credentials: true,
+//   })
+// );
 
 app.use(express.json());
 
@@ -130,16 +135,12 @@ app.post("/api/cheat-sheet", async (req, res) => {
   }
 });
 
-app.post("/mcqs", async (req, res) => {
+app.post("/api/mcqs", async (req, res) => {
+  const { order } = req.body;
+
   try {
-    const { gc, order } = req.body;
-
-    if (!gc || !order) {
-      return res.status(400).json({ message: "gc and order are required" });
-    }
-
     // Find all matching questions
-    const mcqs = await Mcq.find({ gc, order });
+    const mcqs = await MCQ.find({ order });
 
     // Format the response
     const formattedMcqs = mcqs.map((item, index) => ({
