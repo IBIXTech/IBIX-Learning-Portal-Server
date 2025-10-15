@@ -17,7 +17,7 @@ connectDB();
 
 app.use(
   cors({
-    origin: "https://ibix-learning-portal.vercel.app",
+    origin: "https://learning.ibixqt.in",
     credentials: true,
   })
 );
