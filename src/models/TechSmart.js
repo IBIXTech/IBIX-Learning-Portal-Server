@@ -1,7 +1,7 @@
 // models/Student.js
 const mongoose = require("mongoose");
 
-const cheatSheetSchema = new mongoose.Schema({
+const techSmartSchema = new mongoose.Schema({
   id: String,
   title: String,
   duration: String,
@@ -14,4 +14,4 @@ const cheatSheetSchema = new mongoose.Schema({
   tag: String,
 });
 
-module.exports = mongoose.model("Cheat Sheet", cheatSheetSchema);
+module.exports = mongoose.model("Tech Smart", techSmartSchema);

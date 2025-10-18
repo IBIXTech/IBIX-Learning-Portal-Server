@@ -4,7 +4,8 @@ require("dotenv").config({
 const express = require("express");
 const connectDB = require("./config/db");
 const Student = require("./models/Student");
-const CheatSheet = require("./models/CheatSheet");
+const TechProSheet = require("./models/TechPro");
+const TechSmart = require("./models/TechSmart");
 const MCQ = require("./models/MCQ");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
@@ -89,11 +90,21 @@ app.post("/api/cheat-sheet", async (req, res) => {
       });
     }
 
+    let cheatSheets = null;
+
+    if (course === "tech-pro") {
+      cheatSheets = await TechProSheet.find({
+        course: { $regex: `^${course}$`, $options: "i" },
+        gc: { $regex: `^${gc}$`, $options: "i" },
+      });
+    } else {
+      cheatSheets = await TechSmart.find({
+        course: { $regex: `^${course}$`, $options: "i" },
+        gc: { $regex: `^${gc}$`, $options: "i" },
+      });
+    }
+
     // Find cheat sheet entries by course and GC (case-insensitive)
-    const cheatSheets = await CheatSheet.find({
-      course: { $regex: `^${course}$`, $options: "i" },
-      gc: { $regex: `^${gc}$`, $options: "i" },
-    });
 
     if (!cheatSheets || cheatSheets.length === 0) {
       return res.json({
@@ -104,6 +115,7 @@ app.post("/api/cheat-sheet", async (req, res) => {
     }
 
     // Prepare the response for the requested GC
+
     const responseData = {
       [gc.toUpperCase()]: {
         classes: cheatSheets.map((item) => ({
