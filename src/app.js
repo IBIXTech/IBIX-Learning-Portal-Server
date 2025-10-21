@@ -81,15 +81,17 @@ app.post("/api/auth/check-student", async (req, res) => {
 
 app.post("/api/cheat-sheet", async (req, res) => {
   try {
-    const { course, gc } = req.body;
+    const { course, gc, uid, joinedDate } = req.body;
+    // console.log("Student ID:", uid, "Joined Date:", joinedDate);
 
-    if (!course || !gc) {
+    if (!course || !gc || !uid || !joinedDate) {
       return res.status(400).json({
         success: false,
-        message: "course & GC required!",
+        message: "course, GC, UID, and joinedDate are required!",
       });
     }
 
+    // Fetch cheat sheets based on course and GC
     let cheatSheets = null;
 
     if (course === "tech-pro") {
@@ -104,8 +106,6 @@ app.post("/api/cheat-sheet", async (req, res) => {
       });
     }
 
-    // Find cheat sheet entries by course and GC (case-insensitive)
-
     if (!cheatSheets || cheatSheets.length === 0) {
       return res.json({
         success: true,
@@ -114,11 +114,48 @@ app.post("/api/cheat-sheet", async (req, res) => {
       });
     }
 
-    // Prepare the response for the requested GC
+    // -------------------------
+    // 🌟 AUTO CLASS UNLOCK LOGIC
+    // -------------------------
+    const today = new Date();
+    const joinDate = new Date(joinedDate);
 
+    // Calculate difference in days between today and join date
+    let diffDays = Math.floor((today - joinDate) / (1000 * 60 * 60 * 24));
+
+    // Unlock starts tomorrow 6 PM for same-day joins
+    const now = new Date();
+    const today6PM = new Date();
+    today6PM.setHours(18, 0, 0, 0);
+
+    // If it's before 6 PM, don't count the current day
+    if (now < today6PM) {
+      diffDays -= 1;
+    }
+
+    // Handle cases
+    let unlockCount = 0;
+
+    if (diffDays < 0) {
+      // Joined in the future (invalid)
+      unlockCount = 0;
+    } else if (diffDays === 0) {
+      // Joined today → unlock starts tomorrow 6PM
+      unlockCount = 0;
+    } else {
+      // Example rule: unlock 1 class per day
+      unlockCount = Math.min(diffDays, cheatSheets.length);
+    }
+
+    // console.log(`Days since join: ${diffDays}, Unlock count: ${unlockCount}`);
+
+    // Slice cheatSheets based on unlockCount
+    const unlockedClasses = cheatSheets.slice(0, unlockCount);
+
+    // Prepare structured response
     const responseData = {
       [gc.toUpperCase()]: {
-        classes: cheatSheets.map((item) => ({
+        classes: unlockedClasses.map((item) => ({
           id: item.id || item._id.toString(),
           title: item.title || "",
           duration: item.duration || "",
@@ -131,8 +168,13 @@ app.post("/api/cheat-sheet", async (req, res) => {
           codeSol: item.codeSol || "",
         })),
       },
+      nextUnlockInfo:
+        unlockCount < cheatSheets.length
+          ? "Next class unlocks today at 6 PM"
+          : "All classes unlocked!",
     };
 
+    // Final response
     return res.json({
       success: true,
       exists: true,
